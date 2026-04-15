@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你在哪里，你相信什么</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Noto+Sans+SC:wght@300;400&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  --paper:#faf6ef;
+  --paper2:#f4ede0;
+  --paper3:#ece0cc;
+  --ink:#2c1f0e;
+  --ink2:#5a3e28;
+  --ink3:#8a6a4a;
+  --ink4:#b8986a;
+  --ink5:#d4bfa0;
+  --rose:#a8503e;
+  --rose2:#c07060;
+  --rose-bg:#f5ebe7;
+  --gold:#9a7a3a;
+  --teal:#3a6a5a;
+  --line:rgba(44,31,14,0.08);
+  --line2:rgba(44,31,14,0.15);
+}
+
+html,body{
+  font-family:'Noto Serif SC',serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* grain texture overlay */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:1000;
+  opacity:0.4;
+}
+
+/* ruled lines like notebook */
+body::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 31px,
+    var(--line) 31px,
+    var(--line) 32px
+  );
+  pointer-events:none;
+  z-index:0;
+  opacity:0.5;
+}
+
+/* screen management */
+.screen{display:none!important;position:relative;z-index:1;}
+.screen.active{display:block!important;}
+#scr-cover.active{display:flex!important;}
+
+/* ══ COVER ══ */
+#scr-cover{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:4rem 2rem;
+  text-align:center;
+}
+
+.cover-date{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:11px;
+  letter-spacing:0.2em;
+  color:var(--ink4);
+  margin-bottom:2.5rem;
+  opacity:0;
+  animation:riseIn 0.8s ease 0.4s forwards;
+}
+
+.cover-title{
+  font-family:'Noto Serif SC',serif;
+  font-size:clamp(1.8rem,5vw,2.8rem);
+  font-weight:300;
+  color:var(--ink);
+  line-height:1.4;
+  letter-spacing:0.05em;
+  opacity:0;
+  animation:riseIn 0.9s ease 0.8s forwards;
+  margin-bottom:0.6rem;
+}
+
+.cover-sub{
+  font-size:13px;
+  color:var(--ink3);
+  letter-spacing:0.08em;
+  opacity:0;
+  animation:riseIn 0.8s ease 1.1s forwards;
+  margin-bottom:3rem;
+  font-weight:300;
+  font-family:'Noto Sans SC',sans-serif;
+}
+
+.cover-rule{
+  width:40px;
+  height:1px;
+  background:var(--ink4);
+  margin:0 auto 2.5rem;
+  opacity:0;
+  animation:riseIn 0.6s ease 1.4s forwards;
+}
+
+.cover-desc{
+  font-size:14px;
+  color:var(--ink3);
+  line-height:2;
+  max-width:340px;
+  font-weight:300;
+  opacity:0;
+  animation:riseIn 0.8s ease 1.6s forwards;
+  margin-bottom:3rem;
+}
+
+.cover-btn{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:12px;
+  letter-spacing:0.2em;
+  color:var(--paper);
+  background:var(--ink2);
+  border:none;
+  padding:13px 40px;
+  border-radius:2px;
+  cursor:pointer;
+  transition:all 0.2s;
+  opacity:0;
+  animation:riseIn 0.8s ease 2s forwards;
+}
+.cover-btn:hover{background:var(--ink);}
+
+/* ══ ORIGIN ══ */
+#scr-origin{
+  min-height:100vh;
+  padding:5rem 2rem 4rem;
+  max-width:680px;
+  margin:0 auto;
+}
+
+.diary-label{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:10px;
+  letter-spacing:0.3em;
+  color:var(--ink4);
+  text-transform:uppercase;
+  margin-bottom:1.25rem;
+}
+
+.diary-heading{
+  font-family:'Noto Serif SC',serif;
+  font-size:clamp(1.4rem,3.5vw,2rem);
+  font-weight:400;
+  color:var(--ink);
+  line-height:1.4;
+  margin-bottom:0.75rem;
+}
+
+.diary-sub{
+  font-size:13px;
+  color:var(--ink3);
+  line-height:1.8;
+  font-family:'Noto Sans SC',sans-serif;
+  font-weight:300;
+  margin-bottom:2.5rem;
+}
+
+.origin-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:2rem;
+}
+@media(max-width:480px){.origin-grid{grid-template-columns:1fr;}}
+
+.origin-card{
+  border:1px solid var(--line2);
+  border-radius:4px;
+  padding:1.25rem 1.1rem;
+  cursor:pointer;
+  background:var(--paper);
+  transition:all 0.2s;
+  position:relative;
+}
+
+.origin-card:hover{
+  border-color:var(--rose2);
+  background:var(--rose-bg);
+}
+.origin-card.selected{
+  border-color:var(--rose);
+  background:var(--rose-bg);
+}
+.origin-card.selected::before{
+  content:'✓';
+  position:absolute;
+  top:10px;right:12px;
+  font-size:11px;
+  color:var(--rose);
+}
+
+.oc-emoji{font-size:18px;margin-bottom:0.5rem;display:block;}
+.oc-name{
+  font-size:14px;
+  font-weight:500;
+  color:var(--ink);
+  margin-bottom:0.35rem;
+  line-height:1.4;
+}
+.oc-desc{
+  font-size:12px;
+  color:var(--ink3);
+  line-height:1.7;
+  font-family:'Noto Sans SC',sans-serif;
+  font-weight:300;
+}
+
+.origin-btn{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:12px;
+  letter-spacing:0.15em;
+  color:var(--paper);
+  background:var(--ink2);
+  border:none;
+  padding:12px 32px;
+  border-radius:2px;
+  cursor:pointer;
+  transition:all 0.2s;
+  opacity:0.3;
+  pointer-events:none;
+}
+.origin-btn.active{opacity:1;pointer-events:all;}
+.origin-btn.active:hover{background:var(--ink);}
+
+/* ══ GAME ══ */
+#scr-game{
+  min-height:100vh;
+  max-width:640px;
+  margin:0 auto;
+  padding:3rem 2rem 6rem;
+}
+
+/* progress */
+.game-progress{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:3.5rem;
+}
+
+.gp-dots{display:flex;gap:5px;flex:1;}
+.gp-dot{
+  height:2px;
+  flex:1;
+  background:var(--line2);
+  border-radius:1px;
+  transition:background 0.4s;
+}
+.gp-dot.done{background:var(--rose2);}
+.gp-dot.current{background:var(--rose);}
+
+.gp-count{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:10px;
+  color:var(--ink4);
+  letter-spacing:0.1em;
+  white-space:nowrap;
+}
+
+/* scene */
+.scene-eyebrow{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:2rem;
+}
+
+.scene-tag{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:10px;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--rose);
+  border:0.5px solid var(--rose2);
+  padding:3px 10px;
+  border-radius:2px;
+}
+
+.scene-yr{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:10px;
+  color:var(--ink5);
+  letter-spacing:0.1em;
+}
+
+/* text lines - the core of the experience */
+#textWrap{margin-bottom:1.5rem;}
+
+.tl{
+  display:block;
+  font-family:'Noto Serif SC',serif;
+  font-size:clamp(15px,2.2vw,17px);
+  font-weight:300;
+  line-height:1.95;
+  color:var(--ink);
+  letter-spacing:0.02em;
+  opacity:0;
+  transform:translateY(5px);
+  transition:opacity 0.65s ease, transform 0.65s ease;
+}
+.tl.show{opacity:1;transform:translateY(0);}
+.tl.em{
+  color:var(--rose);
+  font-weight:400;
+}
+.tl.tension{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:13px;
+  font-weight:300;
+  color:var(--ink3);
+  letter-spacing:0.06em;
+  line-height:1.8;
+  padding:0.9rem 0;
+  border-top:0.5px solid var(--line2);
+  border-bottom:0.5px solid var(--line2);
+  margin:0.8rem 0;
+}
+.tl.gap{height:0.75rem;}
+.tl.sgap{height:0.35rem;}
+
+/* divider before choices */
+.choice-divider{
+  width:0;
+  height:0.5px;
+  background:linear-gradient(to right, var(--rose2), transparent);
+  margin:1.5rem 0;
+  transition:width 1s ease;
+  opacity:0;
+  transition:width 1s ease, opacity 0.5s ease;
+}
+.choice-divider.show{width:180px;opacity:1;}
+
+/* choice area */
+#choiceWrap{
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity 0.6s ease, transform 0.6s ease;
+}
+#choiceWrap.show{opacity:1;transform:translateY(0);}
+
+.choice-prompt{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:10px;
+  letter-spacing:0.25em;
+  color:var(--ink4);
+  margin-bottom:0.9rem;
+  text-transform:uppercase;
+}
+
+.choices{display:flex;flex-direction:column;gap:9px;}
+
+.ch-btn{
+  font-family:'Noto Serif SC',serif;
+  font-size:clamp(13px,1.9vw,15px);
+  font-weight:300;
+  color:var(--ink2);
+  background:var(--paper);
+  border:0.5px solid var(--line2);
+  padding:14px 18px;
+  border-radius:3px;
+  cursor:pointer;
+  text-align:left;
+  line-height:1.7;
+  transition:all 0.18s;
+  letter-spacing:0.01em;
+}
+.ch-btn:hover{
+  border-color:var(--rose2);
+  background:var(--rose-bg);
+  color:var(--ink);
+}
+.ch-btn.chosen{
+  border-color:var(--rose);
+  background:var(--rose-bg);
+  color:var(--ink);
+  pointer-events:none;
+}
+.ch-btn.faded{opacity:0.25;pointer-events:none;}
+
+/* echo */
+#echoWrap{
+  margin-top:1.75rem;
+  opacity:0;
+  transition:opacity 0.6s ease;
+}
+#echoWrap.show{opacity:1;}
+
+.echo-mark{
+  width:24px;
+  height:1px;
+  background:var(--gold);
+  margin-bottom:1rem;
+  opacity:0.5;
+}
+
+.echo-line{
+  display:block;
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:13px;
+  color:var(--ink3);
+  line-height:1.9;
+  font-weight:300;
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity 0.5s ease, transform 0.5s ease;
+  letter-spacing:0.03em;
+}
+.echo-line.show{opacity:1;transform:translateY(0);}
+
+#nextBtn{
+  display:block;
+  margin-top:2rem;
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:11px;
+  letter-spacing:0.2em;
+  color:var(--ink3);
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  transition:color 0.2s, opacity 0.5s ease;
+  padding:0.5rem 0;
+  opacity:0;
+  pointer-events:none;
+}
+#nextBtn:hover{color:var(--ink);}
+#nextBtn.show{opacity:1;pointer-events:all;}
+
+/* ══ RESULT ══ */
+#scr-result{
+  min-height:100vh;
+  max-width:640px;
+  margin:0 auto;
+  padding:4rem 2rem 6rem;
+}
+
+.res-top{
+  padding-bottom:2.5rem;
+  border-bottom:0.5px solid var(--line2);
+  margin-bottom:2.5rem;
+}
+
+.res-label{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:10px;
+  letter-spacing:0.3em;
+  color:var(--ink4);
+  text-transform:uppercase;
+  margin-bottom:1rem;
+  opacity:0;
+  animation:riseIn 0.8s ease 0.2s forwards;
+}
+
+.res-name{
+  font-family:'Noto Serif SC',serif;
+  font-size:clamp(1.5rem,4vw,2.2rem);
+  font-weight:400;
+  color:var(--ink);
+  line-height:1.3;
+  margin-bottom:1rem;
+  opacity:0;
+  animation:riseIn 0.8s ease 0.5s forwards;
+}
+
+.res-intro{
+  font-size:14px;
+  color:var(--ink2);
+  line-height:1.95;
+  font-family:'Noto Sans SC',sans-serif;
+  font-weight:300;
+  opacity:0;
+  animation:riseIn 0.8s ease 0.8s forwards;
+}
+
+/* stats */
+.stats-wrap{
+  margin-bottom:2.5rem;
+  opacity:0;
+  animation:riseIn 0.8s ease 1.1s forwards;
+}
+
+.stats-label{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:10px;
+  letter-spacing:0.2em;
+  color:var(--ink4);
+  text-transform:uppercase;
+  margin-bottom:1.25rem;
+}
+
+.stat-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:0.9rem;
+}
+.stat-name{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:12px;
+  color:var(--ink3);
+  width:72px;
+  flex-shrink:0;
+}
+.stat-bar{
+  flex:1;
+  height:3px;
+  background:var(--line2);
+  border-radius:2px;
+  overflow:hidden;
+}
+.stat-fill{
+  height:100%;
+  border-radius:2px;
+  width:0;
+  transition:width 1.4s cubic-bezier(0.4,0,0.2,1);
+}
+.stat-val{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:11px;
+  color:var(--ink4);
+  width:28px;
+  text-align:right;
+  flex-shrink:0;
+}
+.stat-note{
+  font-size:11px;
+  color:var(--ink5);
+  font-family:'Noto Sans SC',sans-serif;
+  padding-left:84px;
+  margin-top:-0.5rem;
+  margin-bottom:0.5rem;
+  line-height:1.6;
+  font-style:italic;
+}
+
+/* mirror */
+.mirror-wrap{
+  padding:2rem 0;
+  border-top:0.5px solid var(--line2);
+  border-bottom:0.5px solid var(--line2);
+  margin-bottom:2.5rem;
+  opacity:0;
+  animation:riseIn 0.8s ease 1.4s forwards;
+}
+.mirror-label{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:10px;
+  letter-spacing:0.25em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:1rem;
+}
+.mirror-name{font-size:18px;font-weight:500;color:var(--ink);margin-bottom:0.2rem;}
+.mirror-years{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:11px;
+  color:var(--ink4);
+  letter-spacing:0.1em;
+  margin-bottom:1.2rem;
+}
+.mirror-story{
+  font-size:13px;
+  color:var(--ink2);
+  line-height:2;
+  font-weight:300;
+  margin-bottom:1.25rem;
+}
+.mirror-par{
+  background:var(--rose-bg);
+  border-left:2px solid var(--rose2);
+  padding:1rem 1.1rem;
+  border-radius:0 4px 4px 0;
+}
+.mp-label{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:9px;
+  letter-spacing:0.2em;
+  color:var(--rose);
+  margin-bottom:0.5rem;
+  text-transform:uppercase;
+}
+.mp-text{
+  font-size:13px;
+  color:var(--ink2);
+  line-height:1.9;
+  font-family:'Noto Sans SC',sans-serif;
+  font-weight:300;
+}
+
+/* rules */
+.rules-wrap{
+  margin-bottom:2.5rem;
+  opacity:0;
+  animation:riseIn 0.8s ease 1.7s forwards;
+}
+.rules-label{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:10px;
+  letter-spacing:0.2em;
+  color:var(--ink4);
+  text-transform:uppercase;
+  margin-bottom:1.5rem;
+}
+.rule-block{
+  margin-bottom:2rem;
+  padding-bottom:2rem;
+  border-bottom:0.5px solid var(--line);
+}
+.rule-block:last-child{border-bottom:none;}
+.rule-n{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:9px;
+  color:var(--rose2);
+  letter-spacing:0.15em;
+  margin-bottom:0.35rem;
+}
+.rule-title{
+  font-size:16px;
+  font-weight:500;
+  color:var(--ink);
+  margin-bottom:0.6rem;
+  line-height:1.4;
+}
+.rule-body{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:13px;
+  color:var(--ink2);
+  line-height:1.9;
+  font-weight:300;
+  margin-bottom:0.5rem;
+}
+.rule-ev{
+  font-size:12px;
+  color:var(--ink4);
+  font-style:italic;
+  line-height:1.7;
+  padding-left:0.9rem;
+  border-left:1px solid var(--line2);
+}
+
+/* final q */
+.fq-wrap{
+  background:var(--paper2);
+  border:0.5px solid var(--line2);
+  border-radius:4px;
+  padding:1.5rem 1.75rem;
+  margin-bottom:2rem;
+  opacity:0;
+  animation:riseIn 0.8s ease 2s forwards;
+}
+.fq-label{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:9px;
+  letter-spacing:0.25em;
+  color:var(--gold);
+  text-transform:uppercase;
+  margin-bottom:0.75rem;
+}
+.fq-text{
+  font-size:15px;
+  color:var(--ink);
+  line-height:1.85;
+  font-weight:300;
+}
+
+.restart-btn{
+  font-family:'Noto Sans SC',sans-serif;
+  font-size:11px;
+  letter-spacing:0.15em;
+  color:var(--ink4);
+  background:transparent;
+  border:0.5px solid var(--line2);
+  padding:9px 24px;
+  border-radius:2px;
+  cursor:pointer;
+  transition:all 0.2s;
+  opacity:0;
+  animation:riseIn 0.8s ease 2.2s forwards;
+}
+.restart-btn:hover{color:var(--ink2);border-color:var(--line2);}
+
+/* transitions */
+#fade{
+  position:fixed;
+  inset:0;
+  background:var(--paper);
+  z-index:500;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.6s ease;
+}
+#fade.in{opacity:1;pointer-events:all;}
+
+@keyframes riseIn{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+</style>
+</head>
+<body>
+<div id="fade"></div>
+
+<!-- COVER -->
+<div id="scr-cover" class="screen active">
+  <p class="cover-date">—— 一本关于你自己的书</p>
+  <h1 class="cover-title">你在哪里<br>你相信什么</h1>
+  <p class="cover-sub">八个处境 · 你真实的选择 · 一面镜子</p>
+  <div class="cover-rule"></div>
+  <p class="cover-desc">没有正确答案。<br>只有你在每个处境里<br>真正会做的事。</p>
+  <button class="cover-btn" onclick="go('origin')">翻开这本书</button>
+</div>
+
+<!-- ORIGIN -->
+<div id="scr-origin" class="screen">
+  <p class="diary-label">第一页</p>
+  <h2 class="diary-heading">你现在在哪里？</h2>
+  <p class="diary-sub">选择一个最接近你此刻处境的起点。<br>它会决定你在故事里面对的具体处境。</p>
+  <div class="origin-grid">
+    <div class="origin-card" onclick="pick(0,this)">
+      <span class="oc-emoji">🌿</span>
+      <div class="oc-name">刚进入职场的新人</div>
+      <div class="oc-desc">22—25岁。第一两份工作，还在摸索规则。家里人期待你"稳定下来"。</div>
+    </div>
+    <div class="origin-card" onclick="pick(1,this)">
+      <span class="oc-emoji">📎</span>
+      <div class="oc-name">职场中段，卡在某个地方</div>
+      <div class="oc-desc">26—32岁。有了一些积累，但遇到了天花板。升迁、关系、身份都在同时变动。</div>
+    </div>
+    <div class="origin-card" onclick="pick(2,this)">
+      <span class="oc-emoji">🌊</span>
+      <div class="oc-name">刚经历了一段关系的结束</div>
+      <div class="oc-desc">任何年龄。感情或婚姻刚结束，或正在考虑结束。你在重新定义自己是谁。</div>
+    </div>
+    <div class="origin-card" onclick="pick(3,this)">
+      <span class="oc-emoji">🪴</span>
+      <div class="oc-name">在家，想重新出发</div>
+      <div class="oc-desc">暂停了职业生涯一段时间——生育、照顾家庭或其他原因。你想找回自己的节奏。</div>
+    </div>
+  </div>
+  <button class="origin-btn" id="originBtn" onclick="startGame()">就是这里，进入故事 →</button>
+</div>
+
+<!-- GAME -->
+<div id="scr-game" class="screen">
+  <div class="game-progress">
+    <div class="gp-dots" id="gpDots"></div>
+    <span class="gp-count" id="gpCount"></span>
+  </div>
+  <div class="scene-eyebrow">
+    <span class="scene-tag" id="scTag"></span>
+    <span class="scene-yr" id="scYr"></span>
+  </div>
+  <div id="textWrap"></div>
+  <div class="choice-divider" id="divider"></div>
+  <div id="choiceWrap">
+    <p class="choice-prompt" id="choicePrompt"></p>
+    <div class="choices" id="choiceList"></div>
+  </div>
+  <div id="echoWrap">
+    <div class="echo-mark"></div>
+    <div id="echoLines"></div>
+  </div>
+  <button id="nextBtn" onclick="nextScene()">继续 ↓</button>
+</div>
+
+<!-- RESULT -->
+<div id="scr-result" class="screen">
+  <div class="res-top">
+    <p class="res-label">你的剧本读完了</p>
+    <h2 class="res-name" id="resName"></h2>
+    <p class="res-intro" id="resIntro"></p>
+  </div>
+  <div class="stats-wrap">
+    <p class="stats-label">你的四维信念地图</p>
+    <div id="statsDiv"></div>
+  </div>
+  <div class="mirror-wrap" id="mirrorDiv"></div>
+  <div class="rules-wrap">
+    <p class="rules-label">在你的选择里，这些规则反复出现</p>
+    <div id="rulesDiv"></div>
+  </div>
+  <div class="fq-wrap" id="fqDiv"></div>
+  <div style="text-align:center;padding-top:1rem;">
+    <button class="restart-btn" onclick="restart()">换个起点，重来一次</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════
+// SCENE DATA — differentiated by origin
+// origin: 0=新人, 1=职场中段, 2=关系结束, 3=在家
+// ════════════════════════════════════
+
+const MAX = 10;
+
+// Each scene: { tag, yr, lines[], choices[] }
+// lines: { t: 'n'|'em'|'ten'|'gap'|'sgap', s? }
+// choices: { t, echo[], stats[a,b,c,d] }
+
+const storyMap = {
+  0: [ // 刚进入职场的新人
+    {
+      tag:'职场', yr:'入职第三个月',
+      lines:[
+        {t:'n',s:'你入职三个月了。'},
+        {t:'sgap'},{t:'n',s:'今天的全组会议上，组长用了你上周私下给他的那份分析——'},
+        {t:'em',s:'一个字都没提你的名字。'},
+        {t:'gap'},{t:'n',s:'会后，同期的同事靠过来低声说："你看见了吧。"'},
+        {t:'sgap'},{t:'n',s:'你当然看见了。'},
+        {t:'gap'},{t:'ten',s:'说出来，新人抱怨——标签立刻贴上。不说，以后还会有下一次。'},
+      ],
+      choices:[
+        {t:'私下找组长，平静地说：这个分析是我做的，以后希望可以署名。',
+          echo:['组长愣了一下。','说："我以为你不在意这种事。"','你说：我在意。','那是你第一次意识到——','说出来，对方才知道那里有一条线。'],
+          stats:[3,2,0,2]},
+        {t:'什么都不做。新人先忍着，等资历到了再说。',
+          echo:['一个月后，另一份报告，同样的命运。','你开始理解"忍"的边界在哪里——','或者说，你开始不确定边界在不在。'],
+          stats:[0,0,0,1]},
+        {t:'在下次组会主动介绍这个分析的背景，自然地带出自己的贡献。',
+          echo:['你讲得很自然。','组长没说话。','但之后他开始在发邮件时抄送你。','你选择了不正面对抗，但也没有放弃。'],
+          stats:[1,1,0,2]}
+      ]
+    },
+    {
+      tag:'家庭', yr:'第一年末',
+      lines:[
+        {t:'n',s:'除夕夜，全家人围在一起。'},
+        {t:'sgap'},{t:'n',s:'饭还没上完，大姑问了一句：'},
+        {t:'em',s:'"在外面打工，有没有找到合适的男孩子？"'},
+        {t:'gap'},{t:'n',s:'所有人都看向你。'},
+        {t:'sgap'},{t:'n',s:'你妈的表情你认识——那是"你可别让我难堪"。'},
+        {t:'gap'},{t:'ten',s:'这一桌人，有人真的在问你，有人在问你妈。'},
+      ],
+      choices:[
+        {t:'平静地说：现在先专注工作，感情的事不着急，我自己有数。',
+          echo:['大姑说了一句"年轻人想法多"，话题转过去了。','你妈之后没说什么，但你看到她松了口气。','你意识到：有时候说清楚，比沉默更让人好过。'],
+          stats:[2,2,0,2]},
+        {t:'笑着含糊过去，说"在看呢在看呢"，转移话题。',
+          echo:['年后，妈妈单独问你：有没有认真找过？','你知道今天的"含糊"，变成了明天要回答的账。'],
+          stats:[0,0,0,0]},
+        {t:'直接说：大姑，我觉得这件事我自己来就好，不需要大家操心。',
+          echo:['沉默了几秒。','你妈的脸色不太好看，但也没说话。','那一顿饭有点尴尬，但你说了你想说的。'],
+          stats:[2,3,0,2]}
+      ]
+    },
+    {
+      tag:'金钱', yr:'第二年',
+      lines:[
+        {t:'n',s:'工资涨了一点，但你发现自己每个月还是月光。'},
+        {t:'sgap'},{t:'n',s:'室友说："反正年轻，花完了再赚就是了。"'},
+        {t:'gap'},{t:'n',s:'你想了想自己如果突然失业——'},
+        {t:'em',s:'你能撑几个月？'},
+        {t:'gap'},{t:'ten',s:'没有积累的"自由"，其实是另一种被困住。'},
+      ],
+      choices:[
+        {t:'开始认真记账，建一个两个月的应急金，哪怕每月只存一点。',
+          echo:['三个月后，你第一次知道自己的钱花在哪里了。','那种感觉不是"有钱"，是——','我知道我在哪里。'],
+          stats:[1,1,3,2]},
+        {t:'先过好当下，有钱再存，现在没必要太紧。',
+          echo:['年底，一个临时的大支出把你打了个措手不及。','你意识到：不是不需要计划，是不愿意面对那个数字。'],
+          stats:[0,0,0,1]},
+        {t:'搜索了一些理财知识，先弄懂基本概念，再慢慢建立习惯。',
+          echo:['你看了几篇文章，有点吃惊——','原来"应急金"这件事，很多人到很晚才开始做。','知道，是第一步。'],
+          stats:[0,0,2,2]}
+      ]
+    },
+    {
+      tag:'职场', yr:'第三年',
+      lines:[
+        {t:'n',s:'你注意到，团队里有个不成文的规则——'},
+        {t:'sgap'},{t:'n',s:'女生说话，经常被打断。'},
+        {t:'sgap'},{t:'n',s:'男生说一模一样的话，没有人打断。'},
+        {t:'gap'},{t:'em',s:'你开始数。数据很准确。'},
+        {t:'gap'},{t:'ten',s:'发现不公平，和决定怎么应对，是两件不同的事。'},
+      ],
+      choices:[
+        {t:'被打断时，平静地继续说完：「让我先把这个说完」，不升温，不退让。',
+          echo:['第一次说这句话，整个会议室安静了一秒。','你继续说完了。','之后这件事发生得少了一些。'],
+          stats:[2,3,0,2]},
+        {t:'找一个你信任的前辈说了这件事，问她当年怎么处理的。',
+          echo:['她笑了说："你已经比我当年聪明了，你注意到了。"','然后她说了几个她的应对方式。','信息本身就是资源。'],
+          stats:[1,1,0,2]},
+        {t:'算了，没必要为这种事消耗精力，做好工作更重要。',
+          echo:['三个月后，你在会议里的发言更少了。','你没有完全意识到这件事。'],
+          stats:[0,0,0,0]}
+      ]
+    },
+    {
+      tag:'关系', yr:'第三年',
+      lines:[
+        {t:'n',s:'你和他在一起快一年了。'},
+        {t:'sgap'},{t:'n',s:'他对你很好，但有一件事你一直没说：'},
+        {t:'sgap'},{t:'n',s:'他开玩笑的方式，有时候让你感觉很小。'},
+        {t:'em',s:'不是大事，但是每次都在。'},
+        {t:'gap'},{t:'ten',s:'不说，你们相安无事。说了，不知道会变成什么。'},
+      ],
+      choices:[
+        {t:'找一个平静的时间说：有件事我一直想说——你这样开玩笑的时候我不太舒服。',
+          echo:['他说他没想到你会在意。','你说：我一直在意，只是一直没说。','那次谈话有点难，但之后他真的注意了。'],
+          stats:[2,3,0,3]},
+        {t:'再观察一段时间，也许是自己太敏感了。',
+          echo:['又过了三个月，你发现你开始回避某些话题——','因为不想触发那种感觉。','你习惯了，但不知道那是好事还是坏事。'],
+          stats:[0,0,0,1]},
+        {t:'跟闺蜜说了，听听她的看法。',
+          echo:['她说："你描述的这个，我也会不舒服。"','那句话让你确认：你不是太敏感。','感知是真实的。'],
+          stats:[1,2,0,2]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第四年',
+      lines:[
+        {t:'n',s:'第四年了。'},
+        {t:'gap'},{t:'n',s:'朋友发来一句话："你现在还快乐吗？"'},
+        {t:'sgap'},{t:'n',s:'你盯着这个问题看了很久。'},
+        {t:'gap'},{t:'em',s:'你发现你不确定。'},
+        {t:'sgap'},{t:'n',s:'不是不好——只是你好像已经很久没有问过自己这个问题了。'},
+        {t:'gap'},{t:'ten',s:'忙着往前走，有时候忘记问：往哪里走。'},
+      ],
+      choices:[
+        {t:'认真想了这个问题，写下三件让你真正感到充实的事，和三件让你感到消耗的事。',
+          echo:['你写下来的时候发现，有些"消耗"你早就知道，只是没承认。','那张清单，后来成了你做很多决定的参照。'],
+          stats:[2,2,1,3]},
+        {t:'快乐不快乐的，想太多了。先把工作做好，其他的以后再说。',
+          echo:['你继续往前走。','有时候很充实，有时候很空——','但你说不清楚为什么空。'],
+          stats:[0,0,0,0]},
+        {t:'和那个朋友认真聊了一次，说了很多平时不说的话。',
+          echo:['她说：你说到某些事的时候，眼神是不一样的。','你知道她在说什么。','有时候，朋友比你更早看见你想要什么。'],
+          stats:[2,1,0,2]}
+      ]
+    },
+    {
+      tag:'职场', yr:'第五年',
+      lines:[
+        {t:'n',s:'一个新机会出现了。'},
+        {t:'sgap'},{t:'n',s:'薪资涨两成，但要换到一个你不太熟悉的方向。'},
+        {t:'gap'},{t:'n',s:'前辈说："试试，年轻怕什么。"'},
+        {t:'n',s:'朋友说："稳一点，别冒险。"'},
+        {t:'gap'},{t:'em',s:'你发现每个人都有自己的理由，但没有一个是你的理由。'},
+        {t:'gap'},{t:'ten',s:'别人的建议是他们的经验，不是你的判断。'},
+      ],
+      choices:[
+        {t:'认真研究这个新方向两周：看行业资料，找做过的人聊，再决定。',
+          echo:['你聊了三个人。','有人说好，有人说不适合你——但你第一次有了自己的判断依据。','决定是你自己做的，不管结果怎样。'],
+          stats:[2,1,2,3]},
+        {t:'接了。趁年轻，试错成本低，先做了再说。',
+          echo:['你进去了。','前三个月很迷茫，后来慢慢找到节奏。','你学到了东西，但也失去了一些原来积累的方向感。'],
+          stats:[1,1,1,1]},
+        {t:'不换。现在的地方虽然慢，但更踏实，先在这里深耕。',
+          echo:['你留下来了。','半年后，你在原有方向上做出了一个让你满意的项目。','踏实，也是一种判断。'],
+          stats:[1,1,1,2]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第五年底',
+      lines:[
+        {t:'n',s:'你回顾了入职以来的五年。'},
+        {t:'gap'},{t:'n',s:'你把"应该"列了出来：'},
+        {t:'sgap'},{t:'n',s:'应该听前辈的、应该先忍着、应该不要太突出、应该等时机成熟……'},
+        {t:'gap'},{t:'em',s:'你发现，你从来没有检验过这些"应该"是不是真的成立。'},
+        {t:'gap'},{t:'ten',s:'执行别人的规则，不等于你认同这些规则。'},
+      ],
+      choices:[
+        {t:'逐条问自己：这条"应该"，受益的是谁？它真的是我想要的吗？',
+          echo:['有几条，你发现是你真心认同的。','有几条，你发现只是"一直这样"。','那一天有点不安，但也有点清醒。'],
+          stats:[2,2,0,3]},
+        {t:'大部分规则都有它的道理，不需要全部质疑。',
+          echo:['你继续按原来的方式走。','但有时候，你会想起那张清单。'],
+          stats:[0,0,0,0]},
+        {t:'选了两条最不确定的"应该"，试着一个月不遵守，看看会发生什么。',
+          echo:['你发现：不遵守"应该等时机"的那一周，你主动争取了一个项目。','拿到了。','结果比你想象的好。'],
+          stats:[2,2,0,3]}
+      ]
+    }
+  ],
+
+  1: [ // 职场中段，卡在某个地方
+    {
+      tag:'职场', yr:'第六年',
+      lines:[
+        {t:'n',s:'你的直属上司要离职了。'},
+        {t:'sgap'},{t:'n',s:'留下了一个空缺。'},
+        {t:'sgap'},{t:'n',s:'你知道自己能做这个位子。'},
+        {t:'sgap'},{t:'n',s:'但是HR没有来问你。'},
+        {t:'gap'},{t:'em',s:'你坐在工位上等了一周。'},
+        {t:'gap'},{t:'ten',s:'等着被看见，和主动说出来，结果经常不同。'},
+      ],
+      choices:[
+        {t:'主动找HR或更高层，表达兴趣，并说明为什么你适合这个位子。',
+          echo:['HR说他们正在考虑内部提拔。','"没想到你会主动来谈。"','你进了候选名单。','不管最后结果如何，你意识到：','开口，是一种可以练的技能。'],
+          stats:[3,2,1,2]},
+        {t:'继续等。如果他们认可我，自然会来找。',
+          echo:['那个位子给了一个外部候选人。','HR以为你对升职"没兴趣"——','因为你从没表示过。'],
+          stats:[0,0,0,1]},
+        {t:'先找一个信任的前辈了解内部情况，再决定要不要出手。',
+          echo:['前辈说偏向内部提拔，建议你去争取。','你去了。','你发现：信息本身，也是一种资源。'],
+          stats:[1,1,0,2]}
+      ]
+    },
+    {
+      tag:'家庭', yr:'第七年',
+      lines:[
+        {t:'n',s:'妈妈每次打电话，最后都会绕到一个话题上。'},
+        {t:'gap'},{t:'em',s:'"三十了，再不结，好的都被挑走了。"'},
+        {t:'gap'},{t:'n',s:'这次她直接托亲戚给你安排了一个相亲。'},
+        {t:'sgap'},{t:'n',s:'没有提前问你。'},
+        {t:'gap'},{t:'ten',s:'这不只是催婚的问题，而是：谁来决定你的时间和生活。'},
+      ],
+      choices:[
+        {t:'直接说清楚：妈，以后这类事要先问我。我自己的事，我来安排。',
+          echo:['她有点不高兴。','但之后再有类似的事，她会先发消息问了。','边界，是要说出来才存在的。'],
+          stats:[2,3,0,2]},
+        {t:'去了。反正就是吃顿饭，不去妈妈会难堪。',
+          echo:['相亲结束，妈妈问感觉怎么样。','你说还行。','下个月，她又安排了一个。'],
+          stats:[0,0,0,0]},
+        {t:'认真和妈妈谈了一次：你对婚姻的真实想法，你的时间表，你需要什么样的支持。',
+          echo:['那个电话打了快两个小时。','妈妈哭了一会儿。','但结束后你发现，有些话你一直没说，说完了有什么松动了。'],
+          stats:[1,2,0,3]}
+      ]
+    },
+    {
+      tag:'职场', yr:'第七年',
+      lines:[
+        {t:'n',s:'你负责的项目刚结束，达成了目标。'},
+        {t:'gap'},{t:'n',s:'复盘会上，老板说了大家的贡献，提到你的时候只说了一句话。'},
+        {t:'gap'},{t:'em',s:'但这个项目，你做了六成的工作。'},
+        {t:'gap'},{t:'n',s:'同组的男同事，贡献没你多，被提到的时间是你的三倍。'},
+        {t:'gap'},{t:'ten',s:'看见了，不代表要忍。但怎么应对，决定了接下来的走向。'},
+      ],
+      choices:[
+        {t:'在会后单独找老板，梳理了自己在这个项目里的具体贡献，平静地说出来。',
+          echo:['老板说他"没注意到分工的具体比例"。','你把结果给他看了。','他后来在团队邮件里做了补充。','平静，但清楚。'],
+          stats:[3,2,0,2]},
+        {t:'算了，结果不错就好，以后做得更好就能被看见。',
+          echo:['下一个项目，同样的情况发生了。','你开始明白："做得更好"和"被看见"，是两件事。'],
+          stats:[0,0,0,1]},
+        {t:'记录下来，留作日后绩效谈话的依据，这次先按下。',
+          echo:['你建了一个文档，记录自己的贡献和数据。','三个月后绩效谈话，你打开了那个文档。','准备，是一种主动权。'],
+          stats:[2,1,0,2]}
+      ]
+    },
+    {
+      tag:'关系', yr:'第七年',
+      lines:[
+        {t:'n',s:'你和他在一起三年了。'},
+        {t:'gap'},{t:'n',s:'他说他"支持你做任何决定"。'},
+        {t:'sgap'},{t:'n',s:'但当你真的需要他的具体想法时，他说：'},
+        {t:'em',s:'"你自己决定吧，我不想给你压力。"'},
+        {t:'gap'},{t:'n',s:'你盯着这句话看了很久。'},
+        {t:'gap'},{t:'ten',s:'"我支持你"——是支持，还是一种体面的卸责？'},
+      ],
+      choices:[
+        {t:'直接说：我需要你的真实想法，不是"我都行"。这件事和我们两个都有关。',
+          echo:['他沉默了一会儿。','"说真的，我希望你……但我知道你放弃的东西多，所以我不敢说。"','这是你们几年里第一次把这种话说出口。'],
+          stats:[2,3,0,3]},
+        {t:'自己做决定。你已经习惯独自扛这些了。',
+          echo:['你做了决定。','他送你的时候抱了很久，什么都没说。','你知道有什么东西松动了，但没有人说出来。'],
+          stats:[1,1,0,1]},
+        {t:'先搁置这件事，等关系方向更清晰了再谈。',
+          echo:['你等了两周。','他没有主动开口。','你意识到：等待本身也是一种选择——只是把主动权交出去了。'],
+          stats:[0,0,0,1]}
+      ]
+    },
+    {
+      tag:'金钱', yr:'第八年',
+      lines:[
+        {t:'n',s:'一个朋友问你：如果你明天失去现在的工作，你能撑多久？'},
+        {t:'gap'},{t:'n',s:'你算了一下。'},
+        {t:'gap'},{t:'em',s:'答案让你有点不安。'},
+        {t:'sgap'},{t:'n',s:'你收入不低，但一直觉得"到时候再说"。'},
+        {t:'gap'},{t:'ten',s:'安全感不是收入给的，是储备给的。'},
+      ],
+      choices:[
+        {t:'认真算了：存款能撑几个月，有没有其他收入来源，技能可以怎么变现。',
+          echo:['你发现有两件事需要立刻处理。','不是很大的事，但你一直没做。','做了之后，你睡得踏实了一点。'],
+          stats:[1,2,3,3]},
+        {t:'反正现在工作稳定，先不想这么多。',
+          echo:['半年后，公司宣布了一轮组织调整。','你那时候才开始认真想这个问题。'],
+          stats:[0,0,0,1]},
+        {t:'列了一个计划：六个月内建立应急金，同时了解自己的技能市场价值。',
+          echo:['你开始执行了。','第一个月比想象中难，因为要改变一些习惯。','但你做了。'],
+          stats:[1,1,3,2]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第八年',
+      lines:[
+        {t:'n',s:'你花了一个周末，把过去八年所有"应该"列了出来。'},
+        {t:'gap'},{t:'n',s:'应该温柔、应该顾全大局、应该不要太在意钱、应该先照顾别人……'},
+        {t:'gap'},{t:'em',s:'你发现，你从未真正检验过其中任何一条。'},
+        {t:'gap'},{t:'ten',s:'这些"应该"，受益的是谁？'},
+      ],
+      choices:[
+        {t:'逐条问：这对谁有利？它真的是我认同的吗？',
+          echo:['有几条你是真心同意的。','有几条只是"一直这样"，从没有人问过你，你也没问过自己。','那一天有点不安，但也有点清醒。'],
+          stats:[2,2,0,3]},
+        {t:'"应该"大多有它的道理，不需要全部质疑。',
+          echo:['你继续按原来的方式走。','但有时候你会想起那张清单。'],
+          stats:[0,0,0,0]},
+        {t:'选了最不确定的几条，试着一个月不遵守，看看会发生什么。',
+          echo:['不遵守"应该顾全大局"的那周，你第一次在会议里明确反对了一个你不认同的提案。','没有发生你担心的事情。'],
+          stats:[2,2,0,3]}
+      ]
+    },
+    {
+      tag:'职业', yr:'第九年',
+      lines:[
+        {t:'n',s:'一个选择出现了：'},
+        {t:'gap'},{t:'n',s:'看起来很赚钱、但完全看不懂逻辑的新项目，'},
+        {t:'n',s:'或者薪资中等、但真正擅长的方向。'},
+        {t:'gap'},{t:'em',s:'"先赚钱，以后再说。"周围人都这么说。'},
+        {t:'gap'},{t:'ten',s:'短期利益和长期复利，是两种不同的时间观。'},
+      ],
+      choices:[
+        {t:'拒绝。做自己看得懂的，哪怕慢一点。',
+          echo:['三年后，那个"很赚钱"的方向遇到了大调整。','你没有受影响。','因为你一直在加深自己真正懂的东西。'],
+          stats:[1,1,2,3]},
+        {t:'接了。先赚钱，以后再转回来。',
+          echo:['你进去了。','看不懂的地方让你很难建立判断力。','赚了一些，但失去了方向感，','花了比想象中更长的时间才转回来。'],
+          stats:[0,0,1,0]},
+        {t:'花两周认真研究，看能不能理解它，再决定。',
+          echo:['研究完你发现：真的看不懂，而且这个不懂不是几个月能补上的。','你选择不接。','这是你第一次用"我看不懂"作为硬标准。'],
+          stats:[1,1,2,3]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第十年',
+      lines:[
+        {t:'n',s:'你回顾了这十年。'},
+        {t:'gap'},{t:'n',s:'你发现有一件事，你从来没有真正问过自己：'},
+        {t:'gap'},{t:'em',s:'"我想过什么样的生活？"'},
+        {t:'sgap'},{t:'n',s:'不是"我应该过"，不是"大家期待我过"。'},
+        {t:'gap'},{t:'ten',s:'没想过这个问题，和想过了答案是不同的，是两种不同的清醒。'},
+      ],
+      choices:[
+        {t:'认真写下来：我理想中的一天、一年、十年是什么样的。先写，不管现实允不允许。',
+          echo:['你写了三页。','有些东西你写完才发现，你其实一直知道，只是从来没让它变成明确的目标。','那三页，后来成了你做很多决定时的参照。'],
+          stats:[2,2,1,3]},
+        {t:'这种问题想太多没用，先把眼前的做好。',
+          echo:['你继续往前走。','有时候感觉很充实，有时候感觉很空——','但你说不清楚为什么空。'],
+          stats:[0,0,0,0]},
+        {t:'和真正了解你的朋友聊了聊，听听她们怎么看你。',
+          echo:['一个朋友说：你谈到某一件事时，眼神是不一样的。','你知道她在说哪件事。','有时候，别人比你更早看见你真正想要什么。'],
+          stats:[2,1,0,2]}
+      ]
+    }
+  ],
+
+  2: [ // 刚经历关系结束
+    {
+      tag:'关系', yr:'分开后第一个月',
+      lines:[
+        {t:'n',s:'你们分开了。'},
+        {t:'sgap'},{t:'n',s:'三年。然后结束了。'},
+        {t:'gap'},{t:'n',s:'朋友圈里，他发了一张新的照片。'},
+        {t:'sgap'},{t:'n',s:'你盯着那张照片看了很久。'},
+        {t:'gap'},{t:'em',s:'你发现你不确定自己感觉到的是什么。'},
+        {t:'sgap'},{t:'n',s:'不只是难过。是一种更复杂的东西。'},
+        {t:'gap'},{t:'ten',s:'有时候，说清楚自己在感受什么，比感受本身更难。'},
+      ],
+      choices:[
+        {t:'写下来：我现在感受到的，到底是什么？是难过、是解脱、还是两种都有？',
+          echo:['你写了很多。','写到一半你发现，你感受到的比你以为的复杂得多。','但写完，你知道自己在哪里了。'],
+          stats:[2,1,0,3]},
+        {t:'不去想。先忙起来，感受会自然过去的。',
+          echo:['你让自己很忙。','三个月后，一件小事触发了你，你才意识到那些感受一直在，只是被压着。'],
+          stats:[0,0,0,0]},
+        {t:'打电话给最好的朋友，什么都说了。',
+          echo:['你说了很多平时不说的话。','她没有给你建议，只是听。','有时候，被听见本身就是一种帮助。'],
+          stats:[2,1,0,2]}
+      ]
+    },
+    {
+      tag:'家庭', yr:'第二个月',
+      lines:[
+        {t:'n',s:'妈妈来电话问你最近怎么样。'},
+        {t:'gap'},{t:'n',s:'你知道她其实在问：你们是不是真的分了？'},
+        {t:'sgap'},{t:'n',s:'你说"还好"。'},
+        {t:'gap'},{t:'em',s:'她停顿了一下，说："是不是你哪里做得不够好？"'},
+        {t:'gap'},{t:'ten',s:'这句话击中了你，但不是因为它是对的。'},
+      ],
+      choices:[
+        {t:'平静地说：妈，不是谁的问题，就是不合适。我现在需要的不是找原因，是时间。',
+          echo:['她说了一句"哦"，停顿了一会儿。','然后说：那你保重。','那是她第一次没有继续追问。'],
+          stats:[2,2,0,2]},
+        {t:'说：是啊，可能是我问题，下次注意。想让她放心。',
+          echo:['挂了电话，你坐在那里。','那句话是假的，但你说了。','你想知道为什么你选择了这样说。'],
+          stats:[0,0,0,1]},
+        {t:'认真说了：妈，我没做错什么，我只是需要你相信我的判断。',
+          echo:['她沉默了比较长的时间。','然后说："好，你有什么需要就说。"','那是你们之间某个东西的开始。'],
+          stats:[2,3,0,2]}
+      ]
+    },
+    {
+      tag:'金钱', yr:'第三个月',
+      lines:[
+        {t:'n',s:'你开始整理自己的账。'},
+        {t:'gap'},{t:'n',s:'这三年，很多事情你们是共同决定的——'},
+        {t:'sgap'},{t:'n',s:'包括钱怎么用，住在哪里，未来怎么规划。'},
+        {t:'gap'},{t:'em',s:'现在，这些都回到你一个人手里了。'},
+        {t:'gap'},{t:'ten',s:'依赖一个人做决定，和真正独立之间，差了多少距离？'},
+      ],
+      choices:[
+        {t:'认真算了：现在的收入、存款、每月支出。制定了一个六个月的独立计划。',
+          echo:['你发现有几件事你一直让他来处理，你不太懂。','你用了两周时间把这些弄明白了。','那种感觉不是孤独，是：我在这里，我能撑住。'],
+          stats:[1,1,3,3]},
+        {t:'先不想这些，慢慢来，不用给自己压力。',
+          echo:['两个月后，一笔意外的支出让你措手不及。','你才意识到，你对自己的财务状况了解得很少。'],
+          stats:[0,0,0,1]},
+        {t:'找了一个做财务的朋友，让她帮你梳理了一遍现状。',
+          echo:['她说你的情况比你以为的要稳。','但有几个地方值得注意。','她给了你一个简单的框架，你开始用了。'],
+          stats:[1,1,2,2]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第四个月',
+      lines:[
+        {t:'n',s:'你翻出了一个很久没打开的本子。'},
+        {t:'gap'},{t:'n',s:'里面是你几年前写下的：我想要的生活是……'},
+        {t:'gap'},{t:'em',s:'你发现，那些想要的，很多你没有做到。'},
+        {t:'sgap'},{t:'n',s:'不是因为他，是因为你一直把它们放在"以后再说"的位置。'},
+        {t:'gap'},{t:'ten',s:'结束一段关系之后，最值得问的问题是：接下来，你要去哪里？'},
+      ],
+      choices:[
+        {t:'重新写下来：现在的我，想要的是什么？不参照任何人，只是自己。',
+          echo:['你写了很久。','有些东西你发现自己不再想要了。','有些东西，你发现你一直想要，只是从没认真对待过。'],
+          stats:[2,2,1,3]},
+        {t:'这个时候太乱了，不适合做重要的决定，先让自己休息。',
+          echo:['你给自己放了一个月假。','休息完，你感觉好一些了。','但那本子，你还是没打开。'],
+          stats:[1,0,0,1]},
+        {t:'找了一个你欣赏的女性，认真研究她是怎么在类似的时刻重新出发的。',
+          echo:['你看了她的很多访谈和文章。','有一句话你记住了：','"重新开始不是从零开始，是带着所有你学到的东西重新出发。"'],
+          stats:[1,1,0,2]}
+      ]
+    },
+    {
+      tag:'关系', yr:'第六个月',
+      lines:[
+        {t:'n',s:'你开始重新和人约会了。'},
+        {t:'gap'},{t:'n',s:'第一次见面结束后，你回到家，感觉有点奇怪。'},
+        {t:'gap'},{t:'em',s:'你发现你一整晚都在表现"适合在一起的自己"。'},
+        {t:'sgap'},{t:'n',s:'而不是真实的自己。'},
+        {t:'gap'},{t:'ten',s:'表演自己，是一种很消耗的相处方式。'},
+      ],
+      choices:[
+        {t:'下一次，试着说一件真实的、"不太讨喜"的事，看看对方怎么反应。',
+          echo:['你说了一件你真实的想法，他有点惊讶。','但之后的对话，比第一次见面真实多了。','你意识到：筛选本身也是一种主动权。'],
+          stats:[2,2,0,2]},
+        {t:'这很正常，第一次见面大家都会这样，慢慢来就好。',
+          echo:['你继续了好几次约会。','越来越累，但说不清楚为什么。'],
+          stats:[0,0,0,1]},
+        {t:'暂停约会。你发现自己还没想清楚自己现在需要什么。',
+          echo:['你给自己一个月不见任何新的人。','那个月你想了很多。','你发现你知道答案了——你现在需要什么。'],
+          stats:[2,1,0,3]}
+      ]
+    },
+    {
+      tag:'职场', yr:'第八个月',
+      lines:[
+        {t:'n',s:'你一直没告诉公司这段时间发生了什么。'},
+        {t:'gap'},{t:'n',s:'工作上你还是做得很好，但你知道你只在用一半的精力。'},
+        {t:'gap'},{t:'n',s:'领导问你：要不要参加一个新项目，会很忙，但机会很好。'},
+        {t:'gap'},{t:'em',s:'你发现你不知道该怎么回答。'},
+        {t:'gap'},{t:'ten',s:'要不要接一个新挑战，取决于你现在有多少真实的余量。'},
+      ],
+      choices:[
+        {t:'诚实地评估自己的状态：你现在有没有精力好好做这件事？给出了一个真实的判断。',
+          echo:['你决定推迟三个月再参与。','领导说理解。','三个月后，你真的准备好了。'],
+          stats:[2,1,1,3]},
+        {t:'接了。忙起来对你好，不然会一直在想那件事。',
+          echo:['你进去了，很忙。','忙确实分散了你的注意力。','但三个月后你发现，你一直在逃避某件还没想清楚的事。'],
+          stats:[1,0,1,1]},
+        {t:'拒绝了。你现在需要稳定，不是新挑战。',
+          echo:['你选择了稳定。','那三个月，你用来处理了很多一直搁置的事情。','你感谢自己做了这个决定。'],
+          stats:[1,1,0,2]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第一年',
+      lines:[
+        {t:'n',s:'你翻出了过去几年所有"应该"。'},
+        {t:'gap'},{t:'n',s:'应该顾全他的感受、应该为关系牺牲一些自己的计划、应该等合适的时机……'},
+        {t:'gap'},{t:'em',s:'你发现有几条"应该"，其实从来不是你自己的选择。'},
+        {t:'gap'},{t:'ten',s:'这不是谁的错，是你第一次认真问自己：我真正认同的是什么？'},
+      ],
+      choices:[
+        {t:'逐条问自己：这条"应该"，是我真心同意的吗？',
+          echo:['有几条，你是真心认同的。','有几条，你发现是你接受了别人的框架，从没检验过。','那一天有点沉，但你感觉到自己变得更清楚了。'],
+          stats:[2,2,0,3]},
+        {t:'回头看有什么意义，向前看比较重要。',
+          echo:['你向前走了。','但有时候你发现，你还在用同样的方式做一些选择——','只是换了一个人。'],
+          stats:[0,0,0,0]},
+        {t:'把这些写下来，带着它们和一个心理咨询师聊了几次。',
+          echo:['她问了你一些你没想过的问题。','一些答案让你意外——','意外地觉得轻松。'],
+          stats:[2,1,0,3]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第十五个月',
+      lines:[
+        {t:'n',s:'你一个人过了第一个生日。'},
+        {t:'gap'},{t:'n',s:'你订了一个蛋糕，一个人吃了。'},
+        {t:'gap'},{t:'em',s:'你发现那一天，你没有很难过。'},
+        {t:'sgap'},{t:'n',s:'你甚至有点——享受？'},
+        {t:'gap'},{t:'ten',s:'一个人是不是比你以为的，没有那么可怕？'},
+      ],
+      choices:[
+        {t:'认真想了：这一年里，我学到了什么？我变成了什么样的人？',
+          echo:['你想了很久。','有些东西你以为失去了，其实是你自己放弃的。','有些东西你以为不重要，现在发现它一直在那里。','你感谢这一年。'],
+          stats:[2,2,1,3]},
+        {t:'不去总结，太伤感，还是往前看吧。',
+          echo:['你继续往前走。','有一天，一个新朋友问你：你是一个什么样的人？','你发现你不太知道怎么回答。'],
+          stats:[0,0,0,0]},
+        {t:'给自己写了一封信，关于这一年，和接下来。',
+          echo:['你写了很多。','写到最后你发现：','你对自己的感觉，比一年前好多了。'],
+          stats:[3,1,0,3]}
+      ]
+    }
+  ],
+
+  3: [ // 在家，想重新出发
+    {
+      tag:'自我', yr:'孩子上小学第一周',
+      lines:[
+        {t:'n',s:'孩子第一天上小学，你送完回来，关上门。'},
+        {t:'gap'},{t:'n',s:'家里安静了。'},
+        {t:'gap'},{t:'em',s:'你站在客厅里，不知道该做什么。'},
+        {t:'sgap'},{t:'n',s:'五年了。五年，你都知道下一步是什么。'},
+        {t:'sgap'},{t:'n',s:'现在，你不知道了。'},
+        {t:'gap'},{t:'ten',s:'你上一次为自己做一个计划，是什么时候？'},
+      ],
+      choices:[
+        {t:'坐下来，认真问自己：如果只考虑我自己，我接下来想做什么？',
+          echo:['你坐了很久。','答案来得很慢，但它来了。','有些东西你发现你一直知道，只是压在下面。'],
+          stats:[2,2,0,3]},
+        {t:'先整理一下家，让自己动起来，慢慢想。',
+          echo:['你整理了一个下午。','房间变干净了。','但那个问题，你还是没答出来。'],
+          stats:[0,0,0,0]},
+        {t:'给五年前的自己写了一封信，写完给现在的自己回了一封。',
+          echo:['那是你做过的最难的写作。','但写完之后你发现——','你比你以为的，更清楚自己是谁。'],
+          stats:[3,1,0,3]}
+      ]
+    },
+    {
+      tag:'职场', yr:'第一个月',
+      lines:[
+        {t:'n',s:'你开始更新简历了。'},
+        {t:'gap'},{t:'n',s:'五年的空白，你不知道怎么写。'},
+        {t:'gap'},{t:'em',s:'"这五年你在做什么？"'},
+        {t:'sgap'},{t:'n',s:'你知道这个问题会被问到。'},
+        {t:'sgap'},{t:'n',s:'你不知道怎么回答——不是因为没有答案，是因为你不确定世界怎么评价这个答案。'},
+        {t:'gap'},{t:'ten',s:'别人评价和你认为的价值，有时候是两件事。'},
+      ],
+      choices:[
+        {t:'认真整理这五年里你真正做的事：协调、规划、解决问题、在压力下做判断。把它们翻译成职场语言。',
+          echo:['你发现这五年，你其实做了很多高难度的事情。','只是没有人付钱给你，所以你一直低估了它。','你重新写了简历。'],
+          stats:[2,2,0,3]},
+        {t:'直接说了实话：在家照顾孩子。如果他们不接受，那就不是对的地方。',
+          echo:['有人确实因此不考虑你了。','但留下来的，反而跟你聊了很长时间。','诚实，是一种筛选。'],
+          stats:[2,1,0,2]},
+        {t:'先找一些短期项目或兼职，重新进入状态，再谈正式的工作。',
+          echo:['你做了两个短期的项目。','你发现：你的能力还在，只是需要重新热身。','你比你以为的，准备好了更多。'],
+          stats:[1,1,1,2]}
+      ]
+    },
+    {
+      tag:'家庭', yr:'第二个月',
+      lines:[
+        {t:'n',s:'你先生知道你想重新工作了。'},
+        {t:'gap'},{t:'n',s:'他说支持你。'},
+        {t:'sgap'},{t:'n',s:'但当你谈到接送孩子的新安排时，他说：'},
+        {t:'em',s:'"这些你来处理就好，你更灵活。"'},
+        {t:'gap'},{t:'n',s:'你"更灵活"，是因为你的工作不如他的重要——'},
+        {t:'sgap'},{t:'n',s:'还是因为这五年里，你一直是那个处理这些事的人？'},
+        {t:'gap'},{t:'ten',s:'"支持你"和"改变分工"，有时候是两件不同的事。'},
+      ],
+      choices:[
+        {t:'认真谈了：我重新工作，意味着家里的分工需要重新安排。我们来讨论一个新的方案。',
+          echo:['他一开始有点惊讶。','但你坚持谈下去了。','最后你们列出了一个新的分工表。','那是你们第一次把这件事当成两个人的事来谈。'],
+          stats:[2,3,0,2]},
+        {t:'先不说，等工作找到了，到时候再谈具体的安排。',
+          echo:['工作找到之后，分工的问题还在那里。','那时候你在同时处理新工作和争取公平分工，比你以为的累。'],
+          stats:[0,0,0,1]},
+        {t:'"灵活"是个问题，但先解决工作的事，家里的事可以边走边调整。',
+          echo:['你先找了工作。','分工的问题，你在后来一点点谈清楚了。','没有一次解决，但方向是对的。'],
+          stats:[1,1,0,2]}
+      ]
+    },
+    {
+      tag:'金钱', yr:'第三个月',
+      lines:[
+        {t:'n',s:'你意识到：这五年，你对家里的财务了解得很少。'},
+        {t:'gap'},{t:'n',s:'银行账户是他的，投资的账户也是他的。'},
+        {t:'sgap'},{t:'n',s:'你知道家里钱够花，但你不知道——'},
+        {t:'em',s:'如果有什么变化，你的处境是什么？'},
+        {t:'gap'},{t:'ten',s:'不了解自己的财务状况，是另一种形式的不独立。'},
+      ],
+      choices:[
+        {t:'认真和他谈：我需要了解我们家完整的财务状况，包括收入、存款、投资、负债。',
+          echo:['他有点诧异，但没有拒绝。','你第一次看到了全貌。','那种感觉不像不信任他，而像是：这也是我的家，我有权知道。'],
+          stats:[2,3,3,3]},
+        {t:'他在负责，我信任他，不需要都掌握。',
+          echo:['你没有问。','有一天，一个朋友在谈离婚的手续，提到财产分割。','你才意识到你几乎什么都不知道。'],
+          stats:[0,0,0,1]},
+        {t:'先开一个自己名下的账户，把自己工作后的收入放在里面，从这里开始建立。',
+          echo:['你开了账户。','那是属于你自己的第一个财务安全感。','你发现这件事比你以为的重要。'],
+          stats:[1,2,3,2]}
+      ]
+    },
+    {
+      tag:'职场', yr:'第五个月',
+      lines:[
+        {t:'n',s:'你找到了一份工作，做了两个月了。'},
+        {t:'gap'},{t:'n',s:'团队里有一个人，说话的方式让你很不舒服。'},
+        {t:'sgap'},{t:'n',s:'不是大问题，但每次开会都有一点。'},
+        {t:'gap'},{t:'em',s:'你犹豫了——你刚回来，不想惹麻烦。'},
+        {t:'gap'},{t:'ten',s:'刚回职场，是更要忍，还是更要说清楚自己的边界？'},
+      ],
+      choices:[
+        {t:'找一个合适的时机，平静地说：你这样说话的方式让我不太舒服，我希望我们可以直接沟通。',
+          echo:['他有点惊讶，但道了歉。','之后，他的方式确实有所改变。','你意识到：说清楚，不代表制造冲突。'],
+          stats:[2,3,0,2]},
+        {t:'先观察，也许只是他的说话习惯，不一定是针对你。',
+          echo:['又过了一个月，还是一样。','你发现你开始不太想发言了。','因为一发言就可能触发那种感觉。'],
+          stats:[0,0,0,1]},
+        {t:'找了同事了解一下这个人的风格，再决定怎么处理。',
+          echo:['同事说这个人对很多人都这样。','她说，有人说过，有人没说。','说了的人，他后来改了。'],
+          stats:[1,1,0,2]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第七个月',
+      lines:[
+        {t:'n',s:'你回职场七个月了。'},
+        {t:'gap'},{t:'n',s:'有一天孩子的老师打电话来，说孩子在学校有点沉默，问你最近家里有什么变化。'},
+        {t:'gap'},{t:'em',s:'你愣了一下。'},
+        {t:'sgap'},{t:'n',s:'你意识到，你这七个月一直在向外——工作、证明自己、找节奏。'},
+        {t:'sgap'},{t:'n',s:'你忘了向内看一看。'},
+        {t:'gap'},{t:'ten',s:'重新出发，不是只有你自己在变化。'},
+      ],
+      choices:[
+        {t:'这周专门留出一些时间，只陪孩子，不做其他事。认真听他说话。',
+          echo:['你陪他玩了一个下午。','他说了很多你不知道他在想的事。','你意识到：你在找回自己，他也在适应一个新的妈妈。'],
+          stats:[2,1,0,2]},
+        {t:'孩子需要时间适应，这很正常，多陪一陪会好的。',
+          echo:['你多花了时间陪他。','他慢慢好了一些。','但你一直有点愧疚，后来你开始问自己：这个愧疚是真的，还是一种习惯？'],
+          stats:[1,0,0,1]},
+        {t:'认真思考：我怎么能让这个新节奏对我和孩子都更可持续？',
+          echo:['你和孩子、和你先生，一起谈了这个问题。','你们制定了一个新的家庭时间表。','它不完美，但是是你们一起做的。'],
+          stats:[2,2,0,3]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第一年',
+      lines:[
+        {t:'n',s:'你把过去几年所有"应该"列了出来。'},
+        {t:'gap'},{t:'n',s:'应该以家庭为先、应该不要太在意自己的事、应该等孩子大了再说……'},
+        {t:'gap'},{t:'em',s:'你发现，这些"应该"，有一些是你真心同意的，有一些是你从没检验过的。'},
+        {t:'gap'},{t:'ten',s:'认同一个"应该"，和从未质疑它，是完全不同的事。'},
+      ],
+      choices:[
+        {t:'逐条问自己：这是我真心认同的，还是我接受了别人的判断？',
+          echo:['你发现，有些"应该"你真的同意，有些只是"一直这样"。','那一天有点不安，但也有点清醒。'],
+          stats:[2,2,0,3]},
+        {t:'这些都有它的道理，现在重新质疑没有太大意义，向前走更重要。',
+          echo:['你继续往前走。','但有时候，在做某些选择的时候，你会感到一种说不清楚的阻力。'],
+          stats:[0,0,0,0]},
+        {t:'选了一条最不确定的"应该"，试着一个月不遵守它，看看真实的代价是什么。',
+          echo:['你选了"应该永远把家人排在自己前面"。','那个月，你有一次把自己的需求放在第一位。','没有发生你担心的事情。'],
+          stats:[2,2,0,3]}
+      ]
+    },
+    {
+      tag:'自我', yr:'第一年半',
+      lines:[
+        {t:'n',s:'你回顾了这一年半。'},
+        {t:'gap'},{t:'n',s:'你想起了当初那个送完孩子，站在客厅里不知道该做什么的自己。'},
+        {t:'gap'},{t:'em',s:'那个人，和现在的你，之间发生了什么？'},
+        {t:'gap'},{t:'ten',s:'重新出发不是找回旧的自己，是认识一个新的自己。'},
+      ],
+      choices:[
+        {t:'认真写下来：这一年半，我做到了什么？我变成了什么样的人？',
+          echo:['你写了很多。','有些东西你以为失去了，其实是你带着它走出来了。','有些东西，你以为自己没有，这一年半才发现你一直有。'],
+          stats:[3,2,1,3]},
+        {t:'还有很多没做到，先把接下来要做的事想清楚。',
+          echo:['你制定了下半年的计划。','都是要做的事。','你没想到那个站在客厅里的自己，其实也值得被认可。'],
+          stats:[0,0,0,1]},
+        {t:'找了一个也经历过类似历程的女性聊了聊，听听她们的感受和想法。',
+          echo:['她说：你以为你在找回自己，其实你在创造一个新的自己。','那句话，你记住了。'],
+          stats:[2,1,0,2]}
+      ]
+    }
+  ]
+};
+
+// archetypes (same logic for all origins)
+const archetypes = [
+  {
+    id:'clear', cond:s=>s.d>=7&&s.a>=6,
+    name:'走在清醒边缘的人',
+    intro:'你不是每次都选了最"正确"的。但你有一个习惯：你愿意停下来问自己——这真的是我想要的吗？这种停顿，比任何一个具体的选择都更值钱。',
+    mirror:{name:'西蒙娜·德·波伏瓦',years:'1908—1986',
+      story:'她二十岁时就决定：不结婚，不生孩子，不依附任何人——不是因为不爱，而是因为她比任何人都更清楚，那些"应该"对她意味着什么代价。她写出了《第二性》，成为二十世纪最重要的思想者之一。她的选择在当时是离经叛道的，但支撑这些选择的，是她异常清醒的自我认知。',
+      parallel:'你的选择模式里有一种相似的东西：你愿意质疑那些别人从不质疑的"应该"，愿意在别人觉得理所当然的地方停下来想一想。这不是反叛，是一种罕见的清醒。'},
+    rules:[
+      {n:'01',title:'对"应该"保持警觉是一种认知技能',body:'大多数"应该"从来没有人给你解释过为什么。它们只是在某个时刻被放进你的系统，然后你就开始执行。你在剧本里多次选择停下来问：这对谁有利？这是我真的同意的吗？',evidence:'历史上几乎所有突破时代限制的女性，都有一个共同点：她们不接受"就是这样"作为理由。'},
+      {n:'02',title:'清醒不等于快乐，但它是真实选择的前提',body:'你不是在追求一个让所有人满意的结局，而是在追求一个你能理解自己为什么做这个决定的结局。这两件事看起来相似，实际上完全不同。',evidence:'波伏瓦说：自由不是做你想做的，而是想做你做的。'},
+      {n:'03',title:'退出能力是真实选择的结构性保障',body:'你在几个关键时刻展现出"我不是因为没有别的选择"的姿态。这种内心的姿态，决定了你做出来的选择的质量。',evidence:'没有退出能力的人，在任何关系里都处于结构性弱势，不管对方多善意。'}
+    ],
+    finalQ:'在你所有的"应该"里，有没有一条你从未真正检验过的？如果你现在去检验它，你觉得它能通过吗？'
+  },
+  {
+    id:'boundary', cond:s=>s.b>=7,
+    name:'正在学会划线的人',
+    intro:'你在这个剧本里多次面对"说还是不说"的选择，而你倾向于说。这比大多数人做得好——大多数人选择了等，等着对方主动，等着"时机合适"。时机大多数时候不会自动合适。',
+    mirror:{name:'居里夫人',years:'1867—1934',
+      story:'她是第一个两次获得诺贝尔奖的人，也是第一个在巴黎大学任教的女性。她在整个职业生涯里一直在和"你不应该在这里"的眼神对抗。她选择了不回应那些眼神，而是把精力放在让结果说话。她的边界不是通过争吵划定的，而是通过持续的在场。',
+      parallel:'你在剧本里展现出的，是一种类似的东西：你不是在等别人允许你，而是在选择占据应该属于你的那个位置。'},
+    rules:[
+      {n:'01',title:'边界需要被说出来才存在',body:'你在剧本里多次选择了开口。这些开口不一定每次都顺利，但它们有一个共同的效果：让对方知道，这里有条线。没说出来的边界，只存在于你心里。',evidence:'妈妈不是不尊重你的边界，她只是从来不知道那里有一条线。'},
+      {n:'02',title:'说出来需要练习，它是一种技能，不是性格',body:'第一次说会很难，第二次稍微容易，第十次会成为本能。你选择了开始练习。大多数人不是"天生不会说"，是没有给自己机会练。',evidence:'能够清晰表达需求的人，在所有类型的关系里都有更高的满意度——不是因为他们得到了更多，而是因为他们参与了关于自己的谈判。'},
+      {n:'03',title:'沟通模式比感情浓度更能预测关系质量',body:'你在关系里倾向于说出不舒服，这不是"挑事"，是建立真实沟通的前提。一段从不发生真实沟通的关系，是两个人各自生活在自己的假设里。',evidence:'研究显示，能预测关系破裂的不是吵架频率，而是蔑视、防御和长期回避。'}
+    ],
+    finalQ:'在你现在最重要的关系里，有没有一件你一直想说但还没说的事？是什么让你没说？那个理由，今天看来还成立吗？'
+  },
+  {
+    id:'economic', cond:s=>s.c>=7,
+    name:'开始认真对待自己的人',
+    intro:'你在这个剧本里对"钱"和"自立"表现出了比大多数人更认真的态度。这不是物质主义——这是你在用一种具体的方式，给自己的未来选择留出空间。',
+    mirror:{name:'张幼仪',years:'1900—1988',
+      story:'她是徐志摩的前妻，在被抛弃后独自带孩子去德国留学，回国后经营服装公司，成为上海四大银行之一的副总裁。她没有用受害者的身份定义自己。她用的方式是：学一个技能，做一件事，再做下一件事。最后她活到了八十八岁，经济独立，精神自足。',
+      parallel:'你在剧本里展现出的，是一种类似的逻辑：不依赖感情或他人的庇护来确保自己的安全，而是把这个安全建立在自己手里。'},
+    rules:[
+      {n:'01',title:'经济独立的核心价值是退出能力，不是物质',body:'你选择了搞清楚自己的钱在哪里、能撑多久、依赖谁。背后的逻辑是：当你知道自己可以独立，你在每一段关系里都是真正在选择留。',evidence:'历史上几乎每个不得不妥协的女性，背后都有一个共同结构：经济上没有选项。'},
+      {n:'02',title:'"看不懂的不做"是一条保护自己的规则',body:'你倾向于在看清楚之前不轻易跳进去。这不是保守，是风险意识。看不懂意味着你对风险的感知是失真的——你感觉风险小，只是因为你不知道风险在哪里。',evidence:'巴菲特说：风险来自不知道自己在做什么。'},
+      {n:'03',title:'技能是唯一不会被拿走的资产',body:'你多次选择了积累真正属于自己的东西——判断力、专业能力、对自己处境的清醒认知。这些比任何外部保障都更稳定。',evidence:'张幼仪用技能重建了人生。那个技能是她在最难的时候主动去学的。'}
+    ],
+    finalQ:'如果明天你所有的外部依靠都不存在了，你的生活会发生什么？这个答案，你愿意接受吗？'
+  },
+  {
+    id:'navigator', cond:()=>true,
+    name:'在两种力量之间找路的人',
+    intro:'你的选择没有一个明显的主导模式——有时直接，有时等待，有时走中间路。这不是缺点，但值得注意：没有模式有时候意味着你在用当下的情绪而不是长期的判断在做决定。',
+    mirror:{name:'张爱玲',years:'1920—1995',
+      story:'她是二十世纪中国最重要的作家之一，但她有一段让很多人困惑的选择：她爱上了一个后来立场成问题的男人，为他付出很多，也为此承受了很久的代价。她比谁都清楚那段关系里发生了什么，但清醒和选择，有时候是两件事。',
+      parallel:'你的选择模式里有一种张爱玲式的特质：你看得清楚，但有时候选择按照情绪而不是判断走。知道这一点，可以帮你在下一次关键时刻多停一秒。'},
+    rules:[
+      {n:'01',title:'清醒和行动是两件事，都需要练习',body:'你有时候看到了问题，但没有采取行动；有时候采取了行动，但没有真正想清楚。真正有力的组合，是两者都有。',evidence:'历史上大多数遗憾，不是来自错误的判断，而是来自正确的判断配上了回避的行动。'},
+      {n:'02',title:'没有模式本身就是一种模式',body:'你的选择倾向于随情境变化，这让你灵活，但也难以预测自己在压力下的反应。建立一两条不轻易打破的原则，可以在你最疲惫的时刻代替你做决定。',evidence:'芒格说：我只想知道我会死在哪里，然后永远不去那里。规则的价值，在于它不需要你每次重新判断。'},
+      {n:'03',title:'你周围的人划定了你认为可能的边界',body:'你在剧本里多次选择向信任的人咨询。这是好习惯。人能做到的事，很大程度上由她认为什么是可能的决定。',evidence:'几乎所有突破时代限制的女性，背后都有一个支持她的关系网络——哪怕只是几个人。'}
+    ],
+    finalQ:'在你做过的所有选择里，有没有一次你清楚地知道"这不对"，但还是那样做了？是什么让你那样做的？那个原因，今天还存在吗？'
+  }
+];
+
+// ════════════════════════════════════
+// STATE
+// ════════════════════════════════════
+let G = {
+  origin: null,
+  scenes: [],
+  idx: 0,
+  stats: {a:0,b:0,c:0,d:0},
+  chosen: false,
+  revealTimer: null,
+  sessionId: null,
+  startedAt: null
+};
+
+// ════════════════════════════════════
+// ANALYTICS
+// 把下面这行换成你从 Apps Script 部署后拿到的网址
+// ════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxSw_X8nEF34TQC-q7fpcvIo7B9LOENevx5eCcpBfmzhKJg4IA1OjuYm-wPsOYLaClg/exec';
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function track(payload) {
+  if (!SCRIPT_URL || SCRIPT_URL.startsWith('你的')) return; // 未配置时静默跳过
+  payload.ts = Date.now();
+  navigator.sendBeacon
+    ? navigator.sendBeacon(SCRIPT_URL, JSON.stringify(payload))
+    : fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify(payload), keepalive:true}).catch(()=>{});
+}
+
+function trackStart() {
+  G.sessionId  = genId();
+  G.startedAt  = Date.now();
+  const originNames = ['刚进入职场的新人','职场中段，卡在某个地方','刚经历了一段关系的结束','在家，想重新出发'];
+  track({
+    type: 'session_start',
+    session_id: G.sessionId,
+    origin: G.origin,
+    origin_name: originNames[G.origin]
+  });
+}
+
+function trackChoice(sceneIdx, sceneTag, choiceIdx) {
+  track({
+    type: 'choice',
+    session_id: G.sessionId,
+    scene_idx: sceneIdx,
+    scene_tag: sceneTag,
+    choice_idx: choiceIdx
+  });
+}
+
+function trackEnd(completed, archetype) {
+  const duration = Math.round((Date.now() - G.startedAt) / 1000);
+  track({
+    type: 'session_end',
+    session_id: G.sessionId,
+    completed,
+    archetype: archetype || '',
+    stat_a: G.stats.a,
+    stat_b: G.stats.b,
+    stat_c: G.stats.c,
+    stat_d: G.stats.d,
+    duration_sec: duration,
+    dropped_at_scene: completed ? null : G.idx
+  });
+}
+
+// 页面关闭/跳走时记录中途退出
+window.addEventListener('beforeunload', () => {
+  if (G.sessionId && !G._ended) {
+    trackEnd(false, null);
+  }
+});
+
+// ════════════════════════════════════
+// UTILS
+// ════════════════════════════════════
+function fadeIn(fn){
+  const f=document.getElementById('fade');
+  f.classList.add('in');
+  setTimeout(()=>{fn();f.classList.remove('in');},600);
+}
+
+function go(id){
+  fadeIn(()=>{
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('scr-'+id).classList.add('active');
+    window.scrollTo(0,0);
+  });
+}
+
+// ════════════════════════════════════
+// ORIGIN
+// ════════════════════════════════════
+function pick(idx, el){
+  document.querySelectorAll('.origin-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  G.origin = idx;
+  const btn = document.getElementById('originBtn');
+  btn.classList.add('active');
+}
+
+function startGame(){
+  if(G.origin===null) return;
+  G.scenes = storyMap[G.origin];
+  G.idx = 0;
+  G.stats = {a:0,b:0,c:0,d:0};
+  G.chosen = false;
+  G._ended = false;
+  trackStart();
+  go('game');
+  setTimeout(buildGame, 700);
+}
+
+// ════════════════════════════════════
+// GAME ENGINE
+// ════════════════════════════════════
+function buildDots(){
+  const d=document.getElementById('gpDots');
+  d.innerHTML='';
+  G.scenes.forEach((_,i)=>{
+    const div=document.createElement('div');
+    div.className='gp-dot';
+    div.id='dot-'+i;
+    d.appendChild(div);
+  });
+}
+
+function updateDots(){
+  G.scenes.forEach((_,i)=>{
+    const d=document.getElementById('dot-'+i);
+    if(!d) return;
+    d.className='gp-dot'+(i<G.idx?' done':i===G.idx?' current':'');
+  });
+  document.getElementById('gpCount').textContent=(G.idx+1)+' / '+G.scenes.length;
+}
+
+function buildGame(){
+  buildDots();
+  renderScene();
+}
+
+function renderScene(){
+  G.chosen = false;
+  const sc = G.scenes[G.idx];
+
+  // clear everything
+  clearTimeout(G.revealTimer);
+  document.getElementById('scTag').textContent = sc.tag;
+  document.getElementById('scYr').textContent = sc.yr;
+  updateDots();
+
+  const tw = document.getElementById('textWrap');
+  const divider = document.getElementById('divider');
+  const cw = document.getElementById('choiceWrap');
+  const ew = document.getElementById('echoWrap');
+  const nb = document.getElementById('nextBtn');
+  const cl = document.getElementById('choiceList');
+
+  tw.innerHTML='';
+  divider.classList.remove('show');
+  cw.classList.remove('show');
+  ew.classList.remove('show');
+  nb.classList.remove('show');
+  cl.innerHTML='';
+  document.getElementById('echoLines').innerHTML='';
+
+  // build line elements
+  sc.lines.forEach((l,i)=>{
+    const span=document.createElement('span');
+    span.className='tl '+l.t;
+    if(l.s) span.textContent=l.s;
+    span.id='tl-'+i;
+    tw.appendChild(span);
+  });
+
+  // build choice buttons
+  sc.choices.forEach((ch,i)=>{
+    const btn=document.createElement('button');
+    btn.className='ch-btn';
+    btn.textContent=ch.t;
+    btn.onclick=()=>makeChoice(i);
+    cl.appendChild(btn);
+  });
+
+  // show prompt only on first scene
+  const prompt = document.getElementById('choicePrompt');
+  prompt.textContent = G.idx === 0 ? '如果是你——' : '';
+
+  let delay=300;
+  const textLines=tw.querySelectorAll('.tl');
+
+  textLines.forEach((el,i)=>{
+    const lt=sc.lines[i].t;
+    const pause=lt==='gap'?350:lt==='sgap'?160:lt==='ten'?320:280;
+    setTimeout(()=>el.classList.add('show'),delay);
+    delay+=pause;
+  });
+
+  // show divider then choices
+  setTimeout(()=>divider.classList.add('show'),delay+150);
+  setTimeout(()=>cw.classList.add('show'),delay+700);
+}
+
+function makeChoice(ci){
+  if(G.chosen) return;
+  G.chosen=true;
+
+  const sc=G.scenes[G.idx];
+  const ch=sc.choices[ci];
+
+  trackChoice(G.idx, sc.tag, ci);
+
+  // update stats
+  G.stats.a=Math.min(MAX,G.stats.a+ch.stats[0]);
+  G.stats.b=Math.min(MAX,G.stats.b+ch.stats[1]);
+  G.stats.c=Math.min(MAX,G.stats.c+ch.stats[2]);
+  G.stats.d=Math.min(MAX,G.stats.d+ch.stats[3]);
+
+  // style btns
+  document.querySelectorAll('.ch-btn').forEach((b,i)=>{
+    b.classList.add(i===ci?'chosen':'faded');
+  });
+
+  // echo
+  const ew=document.getElementById('echoWrap');
+  const el=document.getElementById('echoLines');
+  el.innerHTML='';
+  ch.echo.forEach(line=>{
+    const s=document.createElement('span');
+    s.className='echo-line';
+    s.textContent=line;
+    el.appendChild(s);
+  });
+  ew.classList.add('show');
+
+  // reveal echo lines
+  const echoEls=el.querySelectorAll('.echo-line');
+  echoEls.forEach((e,i)=>{
+    setTimeout(()=>e.classList.add('show'),350+i*480);
+  });
+
+  // show next button after all echo lines
+  const delay=400+ch.echo.length*480;
+  setTimeout(()=>{
+    const nb=document.getElementById('nextBtn');
+    nb.textContent=G.idx===G.scenes.length-1?'看看我的剧本 ↓':'继续 ↓';
+    nb.classList.add('show');
+  }, delay);
+}
+
+function nextScene(){
+  G.idx++;
+  if(G.idx>=G.scenes.length){
+    go('result');
+    setTimeout(buildResult,700);
+    return;
+  }
+  // soft fade within game
+  const main=document.getElementById('scr-game');
+  main.style.transition='opacity 0.35s ease';
+  main.style.opacity='0';
+  setTimeout(()=>{
+    renderScene();
+    main.style.opacity='1';
+    window.scrollTo(0,0);
+  },350);
+}
+
+// ════════════════════════════════════
+// RESULT
+// ════════════════════════════════════
+function buildResult(){
+  const s=G.stats;
+  const arch=archetypes.find(a=>a.cond(s))||archetypes[archetypes.length-1];
+
+  G._ended = true;
+  trackEnd(true, arch.id);
+
+  document.getElementById('resName').textContent=arch.name;
+  document.getElementById('resIntro').textContent=arch.intro;
+
+  const statDefs=[
+    {k:'a',label:'自主力',color:'#a8503e',note:'你在关键处境里选择自己做决定的频率'},
+    {k:'b',label:'边界感',color:'#9a7a3a',note:'你愿意说出"我不舒服"或"这不行"的能力'},
+    {k:'c',label:'经济意识',color:'#3a6a5a',note:'你把经济独立当作优先项的程度'},
+    {k:'d',label:'清醒度',color:'#6a4a7a',note:'你停下来质疑"应该"的频率'}
+  ];
+
+  let sh='';
+  statDefs.forEach(sd=>{
+    const pct=Math.round((s[sd.k]/MAX)*100);
+    sh+=`<div class="stat-row">
+      <span class="stat-name">${sd.label}</span>
+      <div class="stat-bar"><div class="stat-fill" data-w="${pct}" style="background:${sd.color}"></div></div>
+      <span class="stat-val">${pct}%</span>
+    </div>
+    <p class="stat-note">${sd.note}</p>`;
+  });
+  document.getElementById('statsDiv').innerHTML=sh;
+
+  const m=arch.mirror;
+  document.getElementById('mirrorDiv').innerHTML=`
+    <p class="mirror-label">历史镜像</p>
+    <p class="mirror-name">${m.name}</p>
+    <p class="mirror-years">${m.years}</p>
+    <p class="mirror-story">${m.story}</p>
+    <div class="mirror-par">
+      <p class="mp-label">你们的平行之处</p>
+      <p class="mp-text">${m.parallel}</p>
+    </div>`;
+
+  let rh='';
+  arch.rules.forEach(r=>{
+    rh+=`<div class="rule-block">
+      <p class="rule-n">规则 ${r.n}</p>
+      <h4 class="rule-title">${r.title}</h4>
+      <p class="rule-body">${r.body}</p>
+      <p class="rule-ev">${r.evidence}</p>
+    </div>`;
+  });
+  document.getElementById('rulesDiv').innerHTML=rh;
+
+  document.getElementById('fqDiv').innerHTML=`
+    <p class="fq-label">留给你的问题</p>
+    <p class="fq-text">${arch.finalQ}</p>`;
+
+  setTimeout(()=>{
+    document.querySelectorAll('.stat-fill').forEach(el=>{
+      el.style.width=el.dataset.w+'%';
+    });
+  },600);
+}
+
+function restart(){
+  G={origin:null,scenes:[],idx:0,stats:{a:0,b:0,c:0,d:0},chosen:false,revealTimer:null};
+  document.querySelectorAll('.origin-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('originBtn').classList.remove('active');
+  document.getElementById('scr-game').style.opacity='1';
+  go('origin');
+}
+</script>
+</body>
+</html>
